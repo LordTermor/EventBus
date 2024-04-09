@@ -11,7 +11,17 @@ if(NOT TARGET Dexode::EventBus)
 	find_package(EventBus CONFIG REQUIRED)
 endif()
 
-find_package(Catch2 2.10 REQUIRED)
+include(FetchContent)
+fetchcontent_declare(
+	Catch2
+	GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+	GIT_TAG v2.13.10
+	OVERRIDE_FIND_PACKAGE
+)
+
+fetchcontent_makeavailable(Catch2)
+
+find_package(Catch2 2 REQUIRED)
 find_package(Threads REQUIRED)
 
 add_subdirectory(unit)
