@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
 
 project(EventBusDev LANGUAGES CXX)
 
-option(ENABLE_TEST "Enable test" ON)
+option(ENABLE_TEST "Enable test" OFF)
 option(ENABLE_PERFORMANCE "Enable performance subproject" OFF)
 option(ENABLE_LIBCXX "Enable build with libc++" OFF)
 
