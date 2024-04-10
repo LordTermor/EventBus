@@ -16,12 +16,6 @@ const T* const type_id_ptr<T>::id = nullptr;
 
 using event_id_t = const void*;
 
-template <typename T>
-constexpr event_id_t event_id() // Helper for getting "type id"
-{
-	return &type_id_ptr<T>::id;
-}
-
 template <class Event>
 constexpr bool validateEvent()
 {
@@ -30,6 +24,13 @@ constexpr bool validateEvent()
 	static_assert(std::is_reference<Event>::value == false, "Struct must be without reference");
 	static_assert(std::is_pointer<Event>::value == false, "Struct must be without pointer");
 	return true;
+}
+
+template <typename T>
+constexpr event_id_t event_id() // Helper for getting "type id"
+{
+	static_assert(internal::validateEvent<T>(), "Invalid event");
+	return &type_id_ptr<T>::id;
 }
 
 } // namespace dexode::eventbus::internal
