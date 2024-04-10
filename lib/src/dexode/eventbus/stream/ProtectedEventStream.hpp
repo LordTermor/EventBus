@@ -18,11 +18,10 @@ class ProtectedEventStream : public EventStream
 	using Callback = std::function<CallbackReturn(const Event&, ExtraArgTypes...)>;
 
 public:
-	void postpone(std::any event) override
+	void postpone(std::any&& event) override
 	{
-		auto myEvent = std::any_cast<Event>(event);
 		std::lock_guard writeGuard{_mutexEvent};
-		_queue.push_back(std::move(myEvent));
+		_queue.push_back(std::any_cast<Event>(std::forward<std::any>(event)));
 	}
 
 	std::size_t process(const std::size_t limit) override

@@ -36,7 +36,7 @@ protected:
 		eventbus::internal::event_id_t eventID,
 		eventbus::CreateStreamCallback createStreamCallback);
 
-	bool postponeEvent(eventbus::PostponeHelper& postponeCall) override;
+	bool postponeEvent(eventbus::PostponeHelper& postponeCall, std::any&& event) override;
 	eventbus::stream::EventStream* findStream(eventbus::internal::event_id_t eventID) const;
 
 	void unlistenAll(std::uint32_t listenerID) override;

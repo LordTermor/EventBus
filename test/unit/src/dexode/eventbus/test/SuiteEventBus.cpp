@@ -1,6 +1,7 @@
 #include <variant>
 
 #include <catch2/catch.hpp>
+#include <iostream>
 
 #include "dexode/EventBus.hpp"
 #include "dexode/eventbus/test/event.hpp"
@@ -489,6 +490,96 @@ TEST_CASE("Should distinguish event producer When", "[EventBus]")
 	//
 	//	REQUIRE(counterGui == 3);
 	//	REQUIRE(counterBackend == 2);
+}
+
+
+struct CounterEvent
+{
+	CounterEvent()
+	{
+		++ctorCounter;
+		std::cout << "Ctor:" << this << std::endl;
+	}
+
+	~CounterEvent()
+	{
+		std::cout << "~Dtor: " << this << std::endl;
+	}
+
+	CounterEvent(const CounterEvent& o)
+	{
+		++copyCtorCounter;
+		std::cout << "COPY from:" << &o << " to: " << this << std::endl;
+	}
+
+	CounterEvent(CounterEvent&& o)
+	{
+		++moveCtorCounter;
+		std::cout << "Move from " << &o << " to: " << this << std::endl;
+	}
+
+	CounterEvent& operator=(const CounterEvent& o)
+	{
+		std::cout << "Copy assign from " << &o << " to: " << this << std::endl;
+		return *this;
+	}
+
+	CounterEvent& operator=(CounterEvent&& o)
+	{
+		std::cout << "Move assign from " << &o << " to: " << this << std::endl;
+		return *this;
+	}
+
+	inline static int ctorCounter = 0;
+	inline static int copyCtorCounter = 0;
+	inline static int moveCtorCounter = 0;
+};
+
+TEST_CASE("Should not copy more than necessary", "[EventBus]")
+{
+	CounterEvent::ctorCounter = 0;
+	CounterEvent::copyCtorCounter = 0;
+	CounterEvent::moveCtorCounter = 0;
+
+	EventBus bus;
+	auto listener = EventBus::Listener::createNotOwning(bus);
+
+	listener.listen([&](const CounterEvent& event) {
+		std::cout << "Event received: " << &event << std::endl;
+	});
+
+	auto listener2 = EventBus::Listener::createNotOwning(bus);
+
+	listener2.listen([&](const CounterEvent& event) {
+		std::cout << "Event2 received:" << &event << std::endl;
+	});
+
+	SECTION("lvalue")
+	{
+		CounterEvent event;
+
+		// Pass event as lvalue so 1 copy is needed
+		bus.postpone(event);
+		REQUIRE(bus.process() == 1);
+
+		CHECK(CounterEvent::ctorCounter == 1);
+		CHECK(CounterEvent::copyCtorCounter == 1);
+		CHECK(CounterEvent::moveCtorCounter == 2);
+	}
+	SECTION("rvalue")
+	{
+		//No copy as we pass rvalue and we can move
+		bus.postpone(CounterEvent{});
+		REQUIRE(bus.process() == 1);
+
+		CHECK(CounterEvent::ctorCounter == 1);
+		CHECK(CounterEvent::copyCtorCounter == 0);
+		CHECK(CounterEvent::moveCtorCounter == 3);
+	}
+
+	std::cout << "Total ctor:" << CounterEvent::ctorCounter << std::endl;
+	std::cout << "Total COPY ctor:" << CounterEvent::copyCtorCounter << std::endl;
+	std::cout << "Total MOVE ctor:" << CounterEvent::moveCtorCounter << std::endl;
 }
 
 } // namespace dexode::eventbus::test

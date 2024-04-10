@@ -35,28 +35,24 @@ class PostponeHelper
 {
 public:
 	internal::event_id_t eventID = nullptr;
-	std::any event;
 
 	PostponeCallback postponeCallback = nullptr; // function pointer
 	CreateStreamCallback createStreamCallback = nullptr; // function pointer
 
 	PostponeHelper(const internal::event_id_t eventId,
-				   std::any&& event,
-				   PostponeCallback postponeCallback,
-				   CreateStreamCallback createStreamCallback)
+	               PostponeCallback postponeCallback,
+	               CreateStreamCallback createStreamCallback)
 		: eventID(eventId)
-		, event(std::forward<std::any>(event))
-		, postponeCallback(postponeCallback)
-		, createStreamCallback(createStreamCallback)
-	{}
+		  , postponeCallback(postponeCallback)
+		  , createStreamCallback(createStreamCallback) {}
 
 	template <typename Event>
-	static PostponeHelper create(std::any&& event)
+	static PostponeHelper create()
 	{
+		static_assert(internal::validateEvent<Event>(), "Invalid event");
 		return PostponeHelper{internal::event_id<Event>(),
-							  std::forward<std::any>(event),
-							  postpone<Event>,
-							  createDefaultEventStream<Event>};
+		                      postpone<Event>,
+		                      createDefaultEventStream<Event>};
 	}
 
 	~PostponeHelper() = default;
@@ -76,15 +72,16 @@ public:
 	virtual std::size_t process() = 0;
 
 	template <typename Event>
-	bool postpone(Event event)
+	bool postpone(Event&& event)
 	{
-		static_assert(internal::validateEvent<Event>(), "Invalid event");
-		auto postponeCall = PostponeHelper::create<Event>(std::move(event));
-		return postponeEvent(postponeCall);
+		using Event_t = std::decay_t<Event>;
+		static_assert(internal::validateEvent<Event_t>(), "Invalid event");
+		auto postponeCall = PostponeHelper::create<Event_t>();
+		return postponeEvent(postponeCall, std::forward<Event>(event));
 	}
 
 protected:
-	virtual bool postponeEvent(PostponeHelper& postponeCall) = 0;
+	virtual bool postponeEvent(PostponeHelper& postponeCall, std::any&& event) = 0;
 	virtual eventbus::stream::EventStream* listen(std::uint32_t listenerID,
 												  internal::event_id_t eventID,
 												  CreateStreamCallback createStreamCallback) = 0;
@@ -123,7 +120,7 @@ private:
 template <typename Event>
 bool postpone(Bus& bus, std::any event)
 {
-	return bus.postpone(std::move(std::any_cast<Event>(event)));
+	return bus.postpone(std::any_cast<Event>(event));
 }
 
 } // namespace dexode::eventbus

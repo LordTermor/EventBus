@@ -3,6 +3,7 @@
 //
 #pragma once
 
+#include <any>
 #include <memory>
 
 #include "Perk.hpp"
@@ -23,7 +24,7 @@ public:
 		: _passToBus{std::move(passTo)}
 	{}
 
-	Flag onPrePostponeEvent(PostponeHelper& postponeCall);
+	Flag onPrePostponeEvent(PostponeHelper& postponeCall, std::any&& event);
 
 private:
 	std::shared_ptr<dexode::eventbus::Bus> _passToBus;

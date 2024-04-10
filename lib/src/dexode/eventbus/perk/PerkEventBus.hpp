@@ -21,10 +21,14 @@ public:
 
 	public:
 		template <typename Perk_t>
-		RegisterHelper& registerPrePostpone(perk::Flag (Perk_t::*method)(PostponeHelper&))
+		RegisterHelper& registerPrePostpone(
+			perk::Flag (Perk_t::*method)(PostponeHelper&, std::any&&))
 		{
 			_bus->_onPrePostpone.push_back(
-				std::bind(method, static_cast<Perk_t*>(_perk), std::placeholders::_1));
+				std::bind(method,
+				          static_cast<Perk_t*>(_perk),
+				          std::placeholders::_1,
+				          std::placeholders::_2));
 			return *this;
 		}
 
@@ -63,7 +67,7 @@ public:
 	}
 
 protected:
-	bool postponeEvent(PostponeHelper& postponeCall) override;
+	bool postponeEvent(PostponeHelper& postponeCall, std::any&& event) override;
 
 private:
 	std::vector<std::shared_ptr<Perk>> _perks;

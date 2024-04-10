@@ -13,7 +13,7 @@ PerkEventBus::RegisterHelper PerkEventBus::addPerk(std::shared_ptr<Perk> perk)
 	return RegisterHelper(this, local);
 }
 
-bool PerkEventBus::postponeEvent(PostponeHelper& postponeCall)
+bool PerkEventBus::postponeEvent(PostponeHelper& postponeCall, std::any&& event)
 {
 	for(const auto& onPrePostpone : _onPrePostpone)
 	{
@@ -22,7 +22,7 @@ bool PerkEventBus::postponeEvent(PostponeHelper& postponeCall)
 			return false;
 		}
 	}
-	if(EventBus::postponeEvent(postponeCall))
+	if(EventBus::postponeEvent(postponeCall, std::forward<std::any>(event)))
 	{
 		for(const auto& onPostPostpone : _onPostPostpone)
 		{

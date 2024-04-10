@@ -20,10 +20,9 @@ class TagPerk : public Perk
 public:
 	TagPerk(std::string tag, dexode::eventbus::Bus* owner)
 		: _tag{std::move(tag)}
-		, _ownerBus{owner}
-	{}
+		  , _ownerBus{owner} {}
 
-	Flag onPrePostponeEvent(PostponeHelper& postponeCall);
+	Flag onPrePostponeEvent(PostponeHelper& postponeCall, std::any&& event);
 
 	template <typename TagEvent>
 	TagPerk& wrapTag()
@@ -32,15 +31,16 @@ public:
 		static_assert(internal::validateEvent<typename TagEvent::Event>(), "Invalid event");
 		constexpr auto eventID = internal::event_id<typename TagEvent::Event>();
 
-		_eventsToWrap[eventID] = [this](std::any event) {
-			TagEvent newEvent{_tag, std::move(std::any_cast<typename TagEvent::Event>(event))};
-			_ownerBus->postpone<TagEvent>(std::move(newEvent));
+		_eventsToWrap[eventID] = [this](std::any&& event) {
+			_ownerBus->postpone<TagEvent>(
+				TagEvent{
+					_tag, std::any_cast<typename TagEvent::Event>(std::forward<std::any>(event))});
 		};
 		return *this;
 	}
 
 private:
-	std::map<internal::event_id_t, std::function<void(std::any)>> _eventsToWrap;
+	std::map<internal::event_id_t, std::function<void(std::any&&)>> _eventsToWrap;
 	std::string _tag;
 	dexode::eventbus::Bus* _ownerBus;
 };

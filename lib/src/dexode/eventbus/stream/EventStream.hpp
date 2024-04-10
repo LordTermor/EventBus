@@ -11,7 +11,7 @@ class EventStream
 public:
 	virtual ~EventStream() = default;
 
-	virtual void postpone(std::any event) = 0;
+	virtual void postpone(std::any&& event) = 0;
 	virtual std::size_t process(std::size_t limit) = 0;
 
 	virtual bool addListener(std::uint32_t listenerID, std::any callback) = 0;
@@ -23,7 +23,7 @@ public:
 class NoopEventStream : public EventStream
 {
 public:
-	void postpone(std::any event) override
+	void postpone(std::any&& event) override
 	{
 		throw std::runtime_error{"Noop"};
 	}

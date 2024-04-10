@@ -116,10 +116,10 @@ eventbus::stream::EventStream* EventBus::streamForEvent(
 	return nullptr;
 }
 
-bool EventBus::postponeEvent(eventbus::PostponeHelper& postponeCall)
+bool EventBus::postponeEvent(eventbus::PostponeHelper& postponeCall, std::any&& event)
 {
 	auto* eventStream = obtainStream(postponeCall.eventID, postponeCall.createStreamCallback);
-	eventStream->postpone(std::move(postponeCall.event));
+	eventStream->postpone(std::forward<std::any>(event));
 	return true;
 }
 

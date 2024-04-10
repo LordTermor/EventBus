@@ -8,9 +8,9 @@
 namespace dexode::eventbus::perk
 {
 
-Flag PassEverythingPerk::onPrePostponeEvent(PostponeHelper& postponeCall)
+Flag PassEverythingPerk::onPrePostponeEvent(PostponeHelper& postponeCall, std::any&& event)
 {
-	postponeCall.postponeCallback(*_passToBus, std::move(postponeCall.event));
+	postponeCall.postponeCallback(*_passToBus, std::forward<std::any>(event));
 	return Flag::postpone_cancel;
 }
 
